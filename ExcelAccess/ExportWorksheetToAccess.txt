@@ -1,0 +1,54 @@
+In this article I will explain how you can import values from an excel worksheet to an existing table in Access using VBA.
+
+–
+DoCmd.TransferSpreadsheet:
+The values in the excel worksheet are imported using the DoCmd.TransferSpreadsheet Method:
+
+Syntax:
+
+Call DoCmd.TransferSpreadsheet(TransferType, SpreadSheetType, TableName, Filename, HasFieldNames, Range)
+
+TransferType: The type of transfer going to be performed. In this example it is acImport.
+SpreedSheetType: The worksheet type. For more information please see the link below:
+
+Microsoft MSDN: AcSpreadSheet Enumeration
+TableName: The name of the table the values will be imported to.
+FileName: The full path of the excel file. In this example it is assumed the excel file is located in the path “D:StuffBusinessTempExcelData.xlsm”
+HasFieldNames: If this value is set to true, the top row of the selected range will be chosen as the field names.
+Range: A valid string value that represents a range in the excel worksheet
+
+For more information about the DoCmd.TransferSpreadsheet command please see the link below:
+
+Microsoft MSDN: TransferSpreadsheet Method [Access 2003 VBA Language Reference]
+Example:
+Note: In order to import data from an excel worksheet to an existing access table , the first row of the range that will be imported must contain the names of the fields each column is being imported to.
+
+Assume we want to append data from the range “A2:D11” to an existing access table:
+Example 2
+The access table already contains the following data:
+Access Table
+
+In the first row of the excel worksheet you can see the names of the Fields the columns will be imported to.
+
+The code below will append the data in the range “A2:D11” to the access table with the name “MyTable1”.
+
+Note: The first row defines the field names and will not be appended:
+
+Sub Example()
+'the path to the excel workbook
+Dim strExcelPath As String
+strExcelPath = "D:StuffBusinessTempExcelData.xlsx"
+'import data from excel
+Call DoCmd.TransferSpreadsheet(acImport, _
+acSpreadsheetTypeExcel8, "MyTable1", strExcelPath, _
+True, "A1:D11")
+End Sub
+
+Result:
+
+Note: The values being displayed in the table will not be updated automatically. The table will still display the same values. The values being displayed can be updated by either one of the methods below:
+
+Pressing F5
+Pressing Shift+F9
+Closing and reopening the database file
+A better solution would be using a datasheet form (rather than working directly with the access table) and calling its requery function. For more information on this subject please see the article below:
