@@ -1,0 +1,108 @@
+'https://software-solutions-online.com/simple-recordset-query-search-access-vba/
+
+n this article I will explain how you can perform searches on Recordsets using queries.
+
+Previously in the article Iterate and Search for Values in a Table, Access VBA I’ve explained how you can perform searches on a recordset object using a simple iteration. The method in this article uses Select Queries which are much faster than the method explained in that article.
+
+In order to use the ADODB.Recordset object you may need to add reference to ADODB object library. For more information on this topic please see the link below:
+
+VBA Access Recordset, Object Library
+In this article I will be using the sample database below:
+Sample Access Databse
+
+The database has a single table with the name:
+
+“MyTable1”
+The table has 4 fields with the following names:
+
+“MyField1”
+“MyField2”
+“MyField3”
+“MyField4”
+–
+Contents [hide]
+
+Syntax:
+Example 1:
+Example 2:
+Syntax:
+objRecordset.Open ("SELECT [Comma Separated Field List] " & _
+"FROM [Table name] " & _
+"WHERE [Criterion]")
+
+The above method will open a recordset with the fields specified by the [Comma Separated Field List], from the table [Table Name], which satisfies the criterion [Criterion].
+
+–
+Example 1:
+In this example, a Select query will be performed to return all the data from the first field of the access table:
+
+Sub Example1()
+Dim objRecordset As ADODB.Recordset
+
+'initated recordset obejct
+Set objRecordset = New ADODB.Recordset
+objRecordset.ActiveConnection = CurrentProject.Connection
+objRecordset.Open ("Select MyField1 From MyTable1")
+End Sub
+
+The resulting recordset object will contain the same data as the query below:
+Result 1
+You can loop through the values in the recordset object using the code below:
+
+Sub Example2()
+Dim objRecordset As ADODB.Recordset
+Dim varTemp As Variant
+
+'initated recordset obejct
+Set objRecordset = New ADODB.Recordset
+objRecordset.ActiveConnection = CurrentProject.Connection
+objRecordset.Open ("Select MyField1 From MyTable1")
+'loop through the values in the recordset object
+While objRecordset.EOF = False
+'get the current value
+varTemp = objRecordset.Fields.Item(0).value
+'move to the next record
+objRecordset.MoveNext
+Wend
+End Sub
+
+–
+Example 2:
+In this example a select query will be performed that will return records which contain the number 110 in their second field (“MyField2”):
+
+Sub Example3()
+Dim objRecordset As ADODB.Recordset
+
+'initated recordset obejct
+Set objRecordset = New ADODB.Recordset
+objRecordset.ActiveConnection = CurrentProject.Connection
+objRecordset.Open ("Select MyField1, MyField2, " & _
+"MyField3, MyField4 " & _
+"From MyTable1 " & _
+"Where MyField2 = 110")
+End Sub
+
+The resulting Recordset will have the same data as the query below:
+Result 2
+You can the access the values in the different fields using the code below:
+
+Sub Example4()
+Dim objRecordset As ADODB.Recordset
+Dim varField1 As Variant
+Dim varField2 As Variant
+Dim varField3 As Variant
+Dim varField4 As Variant
+
+'initated recordset obejct
+Set objRecordset = New ADODB.Recordset
+objRecordset.ActiveConnection = CurrentProject.Connection
+objRecordset.Open ("Select MyField1, MyField2, " & _
+"MyField3, MyField4 " & _
+"From MyTable1 " & _
+"Where MyField2 = 110")
+'get record values
+varField1 = objRecordset.Fields(0).value
+varField2 = objRecordset.Fields(1).value
+varField3 = objRecordset.Fields(2).value
+varField4 = objRecordset.Fields(3).value
+End Sub
