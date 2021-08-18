@@ -1,0 +1,111 @@
+'https://software-solutions-online.com/modify-existing-data-in-table-access-vba-recordsets/
+
+Dim objRecordset As ADODB.Recordset
+Set objRecordset = New ADODB.Recordset
+'initated recordset obejct
+objRecordset.ActiveConnection = CurrentProject.Connection
+Call objRecordset.Open("MyTable1", , , adLockBatchOptimistic)
+
+Note: The code above will initiate a recordset object that will pointing at the first record of the access table.
+
+Note: Rather than opening the entire table, we could have used a query to filter the data and return only the values we need. For example we could have replace the last line of the code above with the code below to only return values from the table whose first field has a value greater than 15:
+
+Call objRecordset.Open ("Select MyField1, MyField2, " & _
+"MyField3, MyField4 " & _
+"From MyTable1 " & _
+"Where MyField1 > 15 ", , , adLockBatchOptimistic)
+
+For more information about this topic please see the link below:
+
+Simple Recordset Query Search , Access VBA
+Note: The first record of the table is not necessarily the first row of the table. The figure below is displaying the first row of the table:
+Recordset location
+
+By using the code below we can move the recordset pointer to the next record:
+
+objRecordset.MoveNext
+
+Example: The code below will loop through all the records in the recrodset:
+
+While objRecordset.EOF = False
+objRecordset.MoveNext
+Wend
+
+The value of the current record the recordset object is pointing at can be read through the Fields collection. The code below will return the value in the first field of the current record the Recordset object is pointing at:
+
+objRecordset.Fields.Item(0).Value
+
+Note: The Fields collection of the Recordset object is a zero based collection. Therefore the first field is reference by the index “0” and the 4th field is referenced by the index “3”.
+
+Note: The Recordset object can be moved to the previous record using the code below:
+
+objRecordset.MovePrevious
+
+Note: The Recordset object can be moved to the last record using the code below:
+
+objRecordset.MoveLast
+
+Note: The Recordset object can be moved to the first record using the code below:
+
+objRecordset.MoveFirst
+
+–
+Example 1:
+In this example we are going to the:
+
+Step 1: Search the table for the record whose first field has the value “8”.
+Step 2: Change the value in the 3rd field (“MyField3”) of that record.
+Note: “MyField3” is the 3rd field therefore is reference through the index “2”:
+
+Sub Example1()
+Dim objRecordset As ADODB.Recordset
+Set objRecordset = New ADODB.Recordset
+Dim i As Integer
+Dim value As Variant
+
+'initated recordset obejct
+objRecordset.ActiveConnection = CurrentProject.Connection
+Call objRecordset.Open("MyTable1", , , adLockBatchOptimistic)
+'find the target record
+While objRecordset.EOF = False
+'check for match
+If objRecordset.Fields.Item(0).value = 8 Then
+'get value
+objRecordset.Fields.Item(2).value = "RandomText"
+objRecordset.UpdateBatch
+'exit loop
+objRecordset.MoveLast
+End If
+objRecordset.MoveNext
+Wend
+End Sub
+
+Result:
+Result
+
+–
+Example 2:
+In this example, all the values in the second field (“MyField2”) will be replace by the values in an arrray:
+
+Sub Example2()
+Dim objRecordset As ADODB.Recordset
+Set objRecordset = New ADODB.Recordset
+Dim arrValues(1 To 11) As Integer
+Dim i As Integer
+
+'fill array with data
+For i = 1 To 11
+arrValues(i) = i ^ 2
+Next i
+'initated recordset obejct
+objRecordset.ActiveConnection = CurrentProject.Connection
+Call objRecordset.Open("MyTable1", , , adLockBatchOptimistic)
+'iterate through column 2
+i = 1
+While objRecordset.EOF = False
+objRecordset.Fields.Item(1).value = arrValues(i)
+i = i + 1
+objRecordset.MoveNext
+objRecordset.UpdateBatch
+Wend
+End Sub
