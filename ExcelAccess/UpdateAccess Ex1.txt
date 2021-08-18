@@ -1,0 +1,146 @@
+'https://software-solutions-online.com/updating-tables-access-database-using-excel-vba/
+
+Set cn = New ADODB.Connection
+
+cn.ConnectionString = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=C:\Products.accdb;Persist Security Info=False;"
+
+cn.Open
+The things to note here:
+
+For Excel, the provider is “ACE.OLEDB.12.0"
+You need to provide the entire path to your access file in the data source (even if your Excel and Access files are in the same folder)
+If you just need to get the data from Access database into Excel, you can simply import the data without using VBA. The article Excel Connect To External Data (Access Database) describes the process in detail.
+
+Step 2: Create a new recordset that will store the data from the table, “ProductTable", in our case.
+
+Set rstProducts = New ADODB.Recordset
+
+With rstProducts
+
+.Open "ProductTable", cn, adOpenKeyset, adLockPessimistic, adCmdTable
+
+End With
+Argument 3 – adOpenKeyset is the CursorType. When you use a keyset cursor you can’t see records that other users add, although records that other users delete are inaccessible from your Recordset. Data changes by other users are still visible.
+
+Argument 4 – adLockPessimistic is the LockType. It indicates pessimistic locking, record by record. The provider does what is necessary to ensure successful editing of the records, usually by locking records at the data source immediately after editing.
+
+Argument 5 – adCmdTable implies that a SQL query is generated to return all rows from the table named in the source.
+
+Step 3: Now we have the entire table contents in the record set. What we need to do next is, for each product (row) in Excel, we need to update the corresponding price in the Access Database. For that we need to filter the recordset based on the Product Name using:
+
+rstProducts.Filter = "ProductName = '" &amp;amp; sProduct &amp;amp; "'"
+where sProduct contains product name from each row in the Excel (one by one in a loop). You can add multiple criteria in the filter string using the “&" operator. Make sure that the quotes are taken care of.
+
+So, now the recordset now contains either a single row with the desired product name or is empty if that product name does not exist.
+
+Step 4: So, we first check whether the filtered resultset is empty using “EOF" property. If it is empty we use the .AddNew method to insert a new record into the table and set the values for the product name and price. (In our example, this piece of code will not be executed). Else, we simply update the price of the product found in the recordset.
+
+If rstProducts.EOF Then
+
+rstProducts.AddNew
+
+rstProducts("rstProducts!ProductName").Value = sProduct
+
+rstProducts("rstProducts!Price").Value = cPrice
+
+Else
+
+rstProducts!Price = cPrice
+
+End If
+Notice how we access individual columns in a recordset using the “!" operator. For example, “rstProducts!ProductName" implies the ProductName column in the recordset.
+
+Step 5: Finally, we update the recordset and perform cleanup operations.
+
+rstProducts.Update
+
+rstProducts.Close
+
+Set rstProducts = Nothing
+
+cn.Close
+
+Set cn = Nothing
+This is how the table will look after the execution of the code.
+
+
+See also, Modify Existing Data in Table, Access VBA Recordsets
+
+You can also import an excel sheet into a table. Please refer to the article: Access VBA, Import Excel Worksheet to Existing Table
+
+Here is the entire code put together. We are using a do while loop to loop through all the products in the Excel sheet. Also notice how we have declared the variable types with the ADODB prefix.
+
+Sub updateAccess()
+
+Dim cn As ADODB.Connection
+
+Dim rstProducts As ADODB.Recordset
+
+Dim sProduct As String
+
+Dim cPrice As String
+
+Dim counter As Integer
+
+Application.DisplayAlerts = False
+
+Set cn = New ADODB.Connection
+
+cn.ConnectionString = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=C:\Products.accdb;Persist Security Info=False;"
+
+cn.Open
+
+Set rstProducts = New ADODB.Recordset
+
+With rstProducts
+
+.Open "ProductTable", cn, adOpenKeyset, adLockPessimistic, adCmdTable
+
+End With
+
+sProduct = Sheet1.Cells(2, 1).Value ' row 1 contains column headings
+
+counter = 0
+
+Do While Not sProduct = ""
+
+sProduct = Sheet1.Cells(2 + counter, 1).Value
+
+cPrice = Sheet1.Cells(2 + counter, 2).Value
+
+rstProducts.Filter = "ProductName = '" &amp;amp; sProduct &amp;amp; "'"
+
+If rstProducts.EOF Then
+
+rstProducts.AddNew
+
+rstProducts("rstProducts!ProductName").Value = sProduct
+
+rstProducts("rstProducts!Price").Value = cPrice
+
+Else
+
+rstProducts!Price = cPrice
+
+End If
+
+rstProducts.Update
+
+counter = counter + 1
+
+sProduct = Sheet1.Cells(2 + counter, 1).Value
+
+Loop
+
+rstProducts.Close
+
+Set rstProducts = Nothing
+
+cn.Close
+
+Set cn = Nothing
+
+Application.DisplayAlerts = True
+
+End Sub
+Thus, we can easily connect to an Access database using Excel VBA and perform basic operations on the data tables.
