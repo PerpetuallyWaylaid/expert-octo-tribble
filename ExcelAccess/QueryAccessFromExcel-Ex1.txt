@@ -1,5 +1,9 @@
 'https://stackoverflow.com/questions/7842607/how-to-query-a-ms-access-table-from-ms-excel-2010-using-vba
 
+'Need ref:
+'Version 2007+ Microsoft Office xx.0 Database Engine Object
+'Version 2007- Microsoft DAO XX Object Library
+
 Option Explicit
 
 Const ConnectionStrngAccessPW As String = _"Provider=Microsoft.ACE.OLEDB.12.0;
