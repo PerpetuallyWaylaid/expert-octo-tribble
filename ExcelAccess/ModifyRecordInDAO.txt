@@ -1,0 +1,17 @@
+'https://docs.microsoft.com/en-us/office/vba/access/concepts/data-access-objects/modify-an-existing-record-in-a-dao-recordset
+
+Dim dbsNorthwind As DAO.Database 
+Dim rstEmployees As DAO.Recordset 
+ 
+   Set dbsNorthwind = CurrentDb 
+   Set rstEmployees = dbsNorthwind.OpenRecordset("Employees") 
+ 
+   rstEmployees.MoveFirst 
+   Do Until rstEmployees.EOF 
+      If rstEmployees!Title = "Sales Representative" Then 
+         rstEmployees.Edit 
+         rstEmployees!Title = "Account Executive" 
+         rstEmployees.Update 
+      End If 
+      rstEmployees.MoveNext 
+   Loop 
