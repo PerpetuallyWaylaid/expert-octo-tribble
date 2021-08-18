@@ -1,0 +1,166 @@
+'https://stackoverflow.com/questions/7842607/how-to-query-a-ms-access-table-from-ms-excel-2010-using-vba
+
+Option Explicit
+
+Const ConnectionStrngAccessPW As String = _"Provider=Microsoft.ACE.OLEDB.12.0;
+Data Source=C:\Users\BARON\Desktop\Test_DB-PW.accdb;
+Jet OLEDB:Database Password=123pass;"
+
+'Use Provider=Microsoft.Jet.OLEDB.4.0 for older MDB format
+
+Const ConnectionStrngAccess As String = _"Provider=Microsoft.ACE.OLEDB.12.0;
+Data Source=C:\Users\BARON\Desktop\Test_DB.accdb;
+Persist Security Info=False;"
+
+'C:\Users\BARON\Desktop\Test.accdb
+
+Sub ModifyingExistingDataOnAccessDB()
+
+    Dim TableConn As ADODB.Connection
+    Dim TableData As ADODB.Recordset
+
+
+    Set TableConn = New ADODB.Connection
+    Set TableData = New ADODB.Recordset
+
+    TableConn.ConnectionString = ConnectionStrngAccess
+
+    TableConn.Open
+
+On Error GoTo CloseConnection
+
+    With TableData
+        .ActiveConnection = TableConn
+        '.Source = "SELECT Emp_Age FROM Roster WHERE Emp_Age > 40;"
+        .Source = "Roster"
+        .LockType = adLockOptimistic
+        .CursorType = adOpenForwardOnly
+        .Open
+        On Error GoTo CloseRecordset
+
+            Do Until .EOF
+                If .Fields("Emp_Age").Value > 40 Then
+                    .Fields("Emp_Age").Value = 40
+                    .Update
+                End If
+                .MoveNext
+            Loop
+            .MoveFirst
+
+        MsgBox "Update Complete"
+    End With
+
+
+CloseRecordset:
+    TableData.CancelUpdate
+    TableData.Close
+
+CloseConnection:
+    TableConn.Close
+
+    Set TableConn = Nothing
+    Set TableData = Nothing
+
+End Sub
+
+Sub AddingDataToAccessDB()
+
+    Dim TableConn As ADODB.Connection
+    Dim TableData As ADODB.Recordset
+    Dim r As Range
+
+    Set TableConn = New ADODB.Connection
+    Set TableData = New ADODB.Recordset
+
+    TableConn.ConnectionString = ConnectionStrngAccess
+
+    TableConn.Open
+
+On Error GoTo CloseConnection
+
+    With TableData
+        .ActiveConnection = TableConn
+        .Source = "Roster"
+        .LockType = adLockOptimistic
+        .CursorType = adOpenForwardOnly
+        .Open
+        On Error GoTo CloseRecordset
+
+        Sheet3.Activate
+        For Each r In Range("B3", Range("B3").End(xlDown))
+
+            MsgBox "Adding " & r.Offset(0, 1)
+            .AddNew
+            .Fields("Emp_ID").Value = r.Offset(0, 0).Value
+            .Fields("Emp_Name").Value = r.Offset(0, 1).Value
+            .Fields("Emp_DOB").Value = r.Offset(0, 2).Value
+            .Fields("Emp_SOD").Value = r.Offset(0, 3).Value
+            .Fields("Emp_EOD").Value = r.Offset(0, 4).Value
+            .Fields("Emp_Age").Value = r.Offset(0, 5).Value
+            .Fields("Emp_Gender").Value = r.Offset(0, 6).Value
+            .Update
+
+        Next r
+
+        MsgBox "Update Complete"
+    End With
+
+
+CloseRecordset:
+    TableData.Close
+
+CloseConnection:
+    TableConn.Close
+
+    Set TableConn = Nothing
+    Set TableData = Nothing
+
+End Sub
+
+
+
+'More Examples
+Sub asdf()
+
+strFile = "C:\Users\bwall\Desktop\Excel Query Access Testing"
+
+Dim cn As Object
+Dim rs As Object
+Dim strSql As String
+Dim strConnection As String
+Dim AppPath As String
+Set cn = CreateObject("ADODB.Connection")
+AppPath = Application.ActiveWorkbook.Path
+
+
+strConnection = "Provider=Microsoft.Jet.OLEDB.4.0;" & _
+    "Data Source=" & AppPath & "\Masterlist_Current_copy.accdb;"
+Debug.Print strConnection
+strSql = "SELECT [Neptune Number],[Description],[Manufacturer],[Manufacturer P/N] FROM [All Components];"
+cn.Open strConnection
+Set rs = cn.Execute(strSql)
+MsgBox rs.Fields(0) & " rows in MyTable"
+rs.Close
+Set rs = Nothing
+cn.Close
+Set cn = Nothing
+
+End Sub  
+
+Public Sub foo()
+    Dim cn As Object
+    Dim rs As Object
+    Dim strSql As String
+    Dim strConnection As String
+    Set cn = CreateObject("ADODB.Connection")
+    strConnection = "Provider=Microsoft.Jet.OLEDB.4.0;" & _
+        "Data Source=C:\Access\webforums\whiteboard2003.mdb"
+    strSql = "SELECT Count(*) FROM MyTable;"
+    cn.Open strConnection
+    Set rs = cn.Execute(strSql)
+    MsgBox rs.fields(0) & " rows in MyTable"
+    rs.Close
+    Set rs = Nothing
+    cn.Close
+    Set cn = Nothing
+End Sub
