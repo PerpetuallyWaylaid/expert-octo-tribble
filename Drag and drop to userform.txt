@@ -1,0 +1,80 @@
+Option Explicit
+
+Private Type POINTAPI
+  X As Long
+  Y As Long
+End Type
+
+#If VBA7 Then
+    Private Type MSG
+        hwnd As LongPtr
+        message As Long
+        wParam As LongPtr
+        lParam As LongPtr
+        time As Long
+        pt As POINTAPI
+    End Type
+
+    Private Declare PtrSafe Function GetMessage Lib "user32" Alias "GetMessageA" (lpMsg As MSG, ByVal hwnd As LongPtr, ByVal wMsgFilterMin As Long, ByVal wMsgFilterMax As Long) As Long
+    Private Declare PtrSafe Function DispatchMessage Lib "user32" Alias "DispatchMessageA" (lpMsg As MSG) As LongPtr
+    Private Declare PtrSafe Function TranslateMessage Lib "user32" (lpMsg As MSG) As Long
+    Private Declare PtrSafe Function WindowFromAccessibleObject Lib "oleacc" (ByVal pacc As IAccessible, phwnd As LongPtr) As Long
+    Private Declare PtrSafe Function IsWindow Lib "user32" (ByVal hwnd As LongPtr) As Long
+    Private Declare PtrSafe Sub DragAcceptFiles Lib "shell32.dll" (ByVal hwnd As LongPtr, ByVal fAccept As Long)
+    Private Declare PtrSafe Sub DragFinish Lib "shell32.dll" (ByVal HDROP As LongPtr)
+    Private Declare PtrSafe Function DragQueryFile Lib "shell32.dll" Alias "DragQueryFileA" (ByVal HDROP As LongPtr, ByVal UINT As Long, ByVal lpStr As String, ByVal ch As Long) As Long
+#Else
+
+    Private Type MSG
+        hwnd As Long
+        message As Long
+        wParam As Long
+        lParam As Long
+        time As Long
+        pt As POINTAPI
+    End Type
+
+    Private Declare Function GetMessage Lib "user32" Alias "GetMessageA" (lpMsg As MSG, ByVal hwnd As Long, ByVal wMsgFilterMin As Long, ByVal wMsgFilterMax As Long) As Long
+    Private Declare Function DispatchMessage Lib "user32" Alias "DispatchMessageA" (lpMsg As MSG) As Long
+    Private Declare Function TranslateMessage Lib "user32" (lpMsg As MSG) As Long
+    Private Declare Function WindowFromAccessibleObject Lib "oleacc" (ByVal pacc As IAccessible, phwnd As Long) As Long
+    Private Declare Function IsWindow Lib "user32" (ByVal hwnd As Long) As Long
+    Private Declare Sub DragAcceptFiles Lib "shell32.dll" (ByVal hwnd As Long, ByVal fAccept As Long)
+    Private Declare Sub DragFinish Lib "shell32.dll" (ByVal HDROP As Long)
+    Private Declare Function DragQueryFile Lib "shell32.dll" Alias "DragQueryFileA" (ByVal HDROP As Long, ByVal UINT As Long, ByVal lpStr As String, ByVal ch As Long) As Long
+#End If
+
+
+
+Private Sub UserForm_Activate()
+
+   #If VBA7 Then
+        Dim hwnd As LongPtr, HDROP As LongPtr
+    #Else
+        Dim hwnd As Long, HDROP As Long
+    #End If
+
+    Const WM_DROPFILES = &H233
+    Dim tMsg As MSG, sFileName As String * 256
+    Dim lFilesCount As Long, i As Long
+
+
+    Call WindowFromAccessibleObject(Me, hwnd)
+    Call DragAcceptFiles(ListBox1.[_GethWnd], True)
+
+    Do While GetMessage(tMsg, 0, 0, 0) And IsWindow(hwnd)
+        If tMsg.message = WM_DROPFILES Then
+            HDROP = tMsg.wParam
+            lFilesCount = DragQueryFile(HDROP, &HFFFFFFFF, 0, 0)
+            If lFilesCount Then
+                For i = 0 To lFilesCount - 1
+                    ListBox1.AddItem Left(sFileName, DragQueryFile(HDROP, i, sFileName, Len(sFileName)))
+                Next i
+            End If
+            Call DragFinish(HDROP)
+        End If
+        Call TranslateMessage(tMsg)
+        Call DispatchMessage(tMsg)
+    Loop
+
+End Sub
