@@ -1,0 +1,9 @@
+https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#form-submission-2
+
+https://www.computerworld.com/article/2546794/hands-on--understanding-ajax.html
+
+Try framed A4 in ijump
+Try A4 standard with xmlhttp
+Need IT to create auth portal that can be accessed by xmlhttp
+
+Routine that returns table counts and samples
